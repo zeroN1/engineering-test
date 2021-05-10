@@ -1,5 +1,5 @@
 # Back End Engineering Test
-At Boardingware, most of our back end services are written in Typescript/Javascript/Node. This project has a similar setup to some of our main web apps and technologies used as well as the structure of our applications. So hopefully this will  give you some idea of what is like to be working on the web team at Boardingware as you are working on this project.
+At Boardingware, most of our back end services are written in Typescript/Javascript/Node. This project shares similarities with our main web application in terms of technologies used and application structure. So hopefully this will give you some idea of what its like to be working on the team at Boardingware as you are working on this project.
 
 ## Technology
 This project is mainly written in Typescript with Node. If you are not  familar with Typescript, you can check out this quick start guide [here](https://www.typescriptlang.org/docs/handbook/typescript-in-5-minutes.html).
@@ -52,10 +52,10 @@ CREATE TABLE student_group(
 );
 ```
 
-To open the database:
+To browse the database with a command line interface:
 
 ```sh
-cd back-end && :sqlite3 backend-test.db
+cd back-end && sqlite3 backend-test.db
 ```
 
 ## How to get started and run the back end app
@@ -77,16 +77,14 @@ cd back-end && npm start
 
 Once the app is compiled successfully you can open the browser and go to http://localhost:4001/student/get-all to see a list of students
 
-### Access the database
-
-To open the database:
-
-```sh
-cd back-end && :sqlite3 backend-test.db
-```
 
 ## Project structure
-On opening the back-end folder in Visual Studio Code and having installed the recommented plugins (vscode-eslint for linting, prettier-vscode for formatting and vscode-styled-components for auto-completing and syntax highlighting of styled-components code), you should see the project is structured as follow:
+Open the project in VSCode as a workspace and install the recommented plugins:
+
+- `vscode-eslint` for linting
+- `prettier-vscode` for formatting
+
+You should see the project is structured as follows:
 
 ```
 .
@@ -95,13 +93,12 @@ On opening the back-end folder in Visual Studio Code and having installed the re
         ├── controller
         ├── entity
         └── interface
-```
 
-## The test
+```
 
 ### src/controller
 
-This is the place for the controllers which contain the actual API functions used by the routes. The client app will call these API functions via the routes setup in routes.ts. We have three controllers:
+This is the place for the controllers which contain the actual API functions used by the routes. The client app will call these API functions via the routes setup in `routes.ts`. We have three controllers:
 
 1. GroupController - the apis for Group CRUD as well as running the Group Filters to populate the Groups with Students.
 2. RollController - the apis for Roll CRUD as well as for running Student Rolls and storing the resulting Student Roll states.
@@ -109,83 +106,76 @@ This is the place for the controllers which contain the actual API functions use
 
 ### src/entity
 
-This is where we have our TypeORM entities. We have one entity per database table. We are using sqlite3 for our database. In the root folder you will see the backend-test.db file which is the sqlite3 database we use. That is configured in ormconfig.json. 
+This is where we have our TypeORM entities. We have one entity per database table. We are using `sqlite3` for our database. In the root folder you will see the `backend-test.db` file which is the sqlite3 database we use. That is configured in `ormconfig.json`. 
 
 ### src/interface
 
 This is where we code up our DTOs that we need.
 
-## PostMan
+## Postman
 
-You can use the tool PostMan to run the APIs against the routes. Postman can be downloaded here: https://www.postman.com/downloads/
+You can use the tool Postman to run the APIs against the routes. Postman can be downloaded [here](https://www.postman.com/downloads/).
 
-Note, you will see in index.ts that 15 students have been added automatically to the database.
+Note, you will see in `index.ts` that 15 students have been added automatically to the database.
 
 You wil be able to use Postman to do the following:
 
 1. Get all students: GET http://localhost:4001/student/get-all
-2. Create a group: POST http://localhost:4001/group/create
-3. Create a roll: POST http://localhost:4001/roll/create
-4. Add student roll states to the roll: POST http://localhost:4001/roll/add-student-states
-5. Run the group filters: POST http://localhost:4001/group/run-group-filters
-6. Get the group list: GET http://localhost:4001/group/get-all
-7. Get students in a group: GET http://localhost:4001/group/get-students-in-group
+2. Create a roll: POST http://localhost:4001/roll/create
+3. Add student roll states to the roll: POST http://localhost:4001/roll/add-student-states
+4. (Not yet implemented) Create a group: POST http://localhost:4001/group/create
+5. (Not yet implemented) Run the group filters: POST http://localhost:4001/group/run-group-filters
+6. (Not yet implemented) Get the group list: GET http://localhost:4001/group/get-all
+7. (Not yet implemented) Get students in a group: GET http://localhost:4001/group/get-students-in-group
 
 
 ## Tasks Background
 
-A Roll is created when Staff at the School do a Roll Check to ensure the Students are all present for the Class or other Activity
+A Roll is created when Staff at the School do a Roll Check to ensure the Students are all present for the Class or other Activity.
 
-Staff at the School would like to analyse these rolls. They would like to be able to create Filters that populate Groups with Students (from these Rolls). They will be able to Add as many Groups as they want. Then at any time they would like to carry out an analysis they can Run these Group Filters to populate the Groups with Students.
+Staff at the School would like to analyse these rolls. They would like to be able to create Filters that populate Groups with Students based on their roll attendance. They will be able to Add as many Groups as they want. Then at any time they would like to carry out an analysis they can Run these Group Filters to populate the Groups with Students.
 
 ## The Tasks
 
-There are two Tasks. Task 2 is more complex than Task 1. We would like you to attempt to complete both tasks. You may use PostMan to test your APIs as you complete them. You may also use PostMan to get more data into the database. 
+There are two Tasks. Task 2 is more complex than Task 1. We would like you to attempt to complete both tasks. You should use Postman to test your APIs as you complete them.
 
-For these tasks you will be working in the GroupController class.
-
-### 1. Code the CreateGroup, DeleteGroup, UpdateGroup, GetGroups, and GetGroupStudents apis 
+### Task 1 - Develop the Group CRUD lifecycle API's
 
 We need to be able to create groups, update groups, delete groups and get a list of the groups. We also need to be able to get a list of Students in a Group.
 
 #### CreateGroup API
 
-Looking at the Group table, create an API so that a Group can be created with all of the fields populated. It is important that the client provides values for these fields: name, number_of_weeks, roll_states, incidents, ltmt.
+Looking at the Group table, create an API so that a Group can be created with all of the fields populated. It is important that the client provides values for these fields:
 
-* number_of_weeks will just be an integer, representing the number of weeks for the analysis period
-* roll_states will be one of the following values: "unmark" | "present" | "absent" | "late"
-* incidents is an integer representing the number of times the student meets the criteria in the period
-* ltmt stands for "Less Than or More Than". It will be either a "<" string or ">".
+* `name` the name of the group
+* `number_of_weeks` will just be an integer, representing the number of weeks for the analysis period
+* `roll_states` will be one or more of the following values: `"unmark" | "present" | "absent" | "late"`
+* `incidents` is an integer representing the number of times the student meets the criteria in the period
+* `ltmt` stands for "Less Than or More Than". It will be either a `"<"` string or `">"`.
 
 #### UpdateGroup and DeleteGroup API   	
 
-These APIs will allow the client to update a group and delete a group. The update group API allows the user to update these fields:
-
-* number_of_weeks will just be an integer, representing the number of weeks for the analysis period
-* roll_states will be one of the following values: "unmark" | "present" | "absent" | "late"
-* incidents is an integer representing the number of times the student meets the criteria in the period
-* ltmt stands for "Less Than or More Than". It will be either a "<" string or ">".
+These APIs will allow the client to update a group and delete a group. The update group API allows the user to update the same fields as the CreateGroup API.
 
 #### GetGroups and GetGroupStudents APIs
 
 The GetGroups API will return a list of groups and will contain all the group fields.
-The GetGroupStudents API will return a list of the Students in the Group. It will return an arra of students and include the fields: student_id, first_name, last_name ad full_name (which concatenates the first and last names)
+The GetGroupStudents API will return a list of the Students in the Group. It will return an array of students and include the fields: id, first_name, last_name and full_name (which is derived from the first and last name).
 
-### 2. Code the RunGroupFilters api 
+### Task 2 - Develop the RunGroupFilters API 
 
-When users Run these Group Filters to do an Analysis this will happen:
+In order to complete this task, you will need to use Postman to generate some roll data into the database to be used for analysis.
+
+When users Run these Group Filters to do an Analysis the following will happen:
 
 1. The Students currently in each Group will be deleted
-2. The Filter will be run against each Group and the Group populated with Students that match. It will also store the nuber of Incidents for the Student in the incident_count field.
-3. The date the filter was "run_at" against each group will be recorded against the Group
-4. The number of students in the group, "student_count", will be stored against the Group
+2. The Filter will be run against each Group and the Group populated with Students that match the filter based on their roll data. It will also store the number of incidents for the Student in the `incident_count` field.
+3. The date the filter was `run_at` against each group will be recorded against the Group
+4. The number of students in the group, `student_count`, will be stored against the Group
 
 The Group Filters we need to support are:
 
-1. Time Period in Weeks, AND
-2. One or more Roll States: "unmark" | "present" | "absent" | "late", AND
-3. (Greater then the Number of Incidents in the Time Period, OR 
-4. Less then the Number of Incidents in the Time Period)
-
-
-
+1. Time Period in Weeks (`number_of_weeks`), AND
+2. One or more Roll States: `"unmark" | "present" | "absent" | "late"` (`roll_states`), AND
+3. (Greater than the Number of Incidents in the Time Period, OR 
+4. Less then the Number of Incidents in the Time Period) (`ltmt` and `incidents`)
