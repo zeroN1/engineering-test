@@ -175,7 +175,7 @@ When users Run these Group Filters to do an Analysis the following will happen:
 
 The Group Filters we need to support are:
 
-1. Time Period in Weeks (`number_of_weeks`), AND
+1. Time Period in Weeks (`number_of_weeks`), backwards in time from the date/time Now, AND
 2. One or more Roll States: `"unmark" | "present" | "absent" | "late"` (`roll_states`), AND
 3. (Greater than the Number of Incidents in the Time Period, OR 
 4. Less then the Number of Incidents in the Time Period) (`ltmt` and `incidents`)
