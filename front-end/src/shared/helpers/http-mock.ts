@@ -5,7 +5,7 @@ interface Options {
   randomFailure?: boolean
 }
 export function httpMock({ success, randomFailure }: Options) {
-  return new Promise((resolve, reject) => {
+  return new Promise<void>((resolve, reject) => {
     // resolves randomly between 500ms to 2000ms
     setTimeout(() => {
       if ((randomFailure && Math.random() < 0.9) || success) {
