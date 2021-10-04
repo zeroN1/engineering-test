@@ -1,5 +1,5 @@
 # Back End Engineering Test
-At Boardingware, most of our back end services are written in Typescript/Javascript/Node. This project shares similarities with our main web application in terms of technologies used and application structure. So hopefully this will give you some idea of what its like to be working on the team at Boardingware as you are working on this project.
+At Orah, most of our back end services are written in Typescript/Javascript/Node. This project shares similarities with our main web application in terms of technologies used. Hopefully this will give you some idea of what its like to be working on the team at Orah as you are working on this project.
 
 ## Technology
 This project is mainly written in Typescript with Node. If you are not  familar with Typescript, you can check out this quick start guide [here](https://www.typescriptlang.org/docs/handbook/typescript-in-5-minutes.html).
@@ -8,7 +8,7 @@ We use TypeORM for our ORM. You can check out TypeORM [here](https://typeorm.io/
 
 ## The Database
 
-We dont use SQLite for our database at Boardingware but have done so in this test to keep our back end app lightweight. You can use the command line shell as documented here: https://www.sqlite.org/cli.html to work with the database. 
+We dont use SQLite for our database at Orah but have done so in this test to keep our back end app lightweight. You can use the [sqlite command line shell](https://www.sqlite.org/cli.html) or a GUI like [sqlitebrowser](https://sqlitebrowser.org/) to work with the database.
 
 These are the tables that we have generated:
 
@@ -81,6 +81,9 @@ Once the app is compiled successfully you can open the browser and go to http://
 ## Project structure
 Open the project in VSCode as a workspace and install the recommented plugins:
 
+```sh
+cd back-end && sqlite3 backend-test.db
+```
 - `vscode-eslint` for linting
 - `prettier-vscode` for formatting
 
@@ -133,17 +136,38 @@ You wil be able to use Postman to do the following:
 
 A Roll is created when Staff at the School do a Roll Check to ensure the Students are all present for the Class or other Activity.
 
-Staff at the School would like to analyse these rolls. They would like to be able to create Filters that populate Groups with Students based on their roll attendance. They will be able to Add as many Groups as they want. Then at any time they would like to carry out an analysis they can Run these Group Filters to populate the Groups with Students.
+Staff at the School would like to analyse these rolls. To achieve this they are able to create `Groups` that are populated with `Students` based on their roll attendance.
 
-## The Tasks
+A `Group` is first created with "roll filter" settings (explained below), and no students in the group. Staff can create as many groups as they want.
 
-There are two Tasks. Task 2 is more complex than Task 1. We would like you to attempt to complete both tasks. You should use Postman to test your APIs as you complete them.
+A `Group` is created with the following "roll filter" settings:
 
-### Task 1 - Develop the Group CRUD lifecycle API's
+* **name** - name of the group, e.g. "Frequently late students"
+* **number_of_weeks** - the number of weeks in the past (from now) used to analyse roll data, e.g. 2
+* **roll_states** - a csv of of roll states to match students with, e.g. "late" or "absent,late"
+* **incidents** - the number of occurrences that a student needs to match to be included in the filter, e.g. 3
+* **ltmt** - whether the student needs to match Less Than or More Than the "incidents" value to be included in the filter, e.g. "<" (less than) or ">" (more than)
+
+Once the group(s) have been created, the "RunGroupFilters" api (Task 2) is run to populate the groups with students based on their roll attendance and the "roll filter" settings saved to that group.
+
+For example, we create the "Frequently late students" group with the following settings:
+
+- *number_of_weeks*: 2
+- *roll_states*: "late"
+- *incidents*: 3
+- *ltmt*: ">" (more than)
+
+Once we run this group filter, we analyse the roll data over the previous 2 weeks to find which students have been "late" more than 3 times. The matching students should then be saved to the group (in the `student_group` table). The following metadata should also be saved:
+
+* **group.run_at** - the date and time the group filter was run
+* **group.student_count** - the count of students that were matched and saved to the group
+* **student_group.incident_count** - the number of roll occurrences that were found to match the filter for that particular student
+
+## Task 1 - Develop the Group CRUD lifecycle API's
 
 We need to be able to create groups, update groups, delete groups and get a list of the groups. We also need to be able to get a list of Students in a Group.
 
-#### CreateGroup API
+### CreateGroup API
 
 Looking at the Group table, create an API so that a Group can be created with all of the fields populated. It is important that the client provides values for these fields:
 
@@ -153,29 +177,38 @@ Looking at the Group table, create an API so that a Group can be created with al
 * `incidents` is an integer representing the number of times the student meets the criteria in the period
 * `ltmt` stands for "Less Than or More Than". It will be either a `"<"` string or `">"`.
 
-#### UpdateGroup and DeleteGroup API   	
+### UpdateGroup and DeleteGroup API   	
 
 These APIs will allow the client to update a group and delete a group. The update group API allows the user to update the same fields as the CreateGroup API.
 
-#### GetGroups and GetGroupStudents APIs
+### GetGroups API
 
 The GetGroups API will return a list of groups and will contain all the group fields.
-The GetGroupStudents API will return a list of the Students in the Group. It will return an array of students and include the fields: id, first_name, last_name and full_name (which is derived from the first and last name).
 
-### Task 2 - Develop the RunGroupFilters API 
+### GetGroupStudents API
 
-In order to complete this task, you will need to use Postman to generate some roll data into the database to be used for analysis.
+The GetGroupStudents API will return a list of the Students in the Group. It will return an array of students and include the fields: `id`, `first_name`, `last_name` and `full_name` (which is derived from the first and last name).
 
-When users Run these Group Filters to do an Analysis the following will happen:
+## Task 2 - Develop the RunGroupFilters API 
+
+In order to complete this task, you will need roll data in the database. Use the existing roll api routes to generate some roll data over the last few weeks that will be used for analysis.
+
+When the user runs the Group Filters to do an Analysis, the following will happen:
 
 1. The Students currently in each Group will be deleted
-2. The Filter will be run against each Group and the Group populated with Students that match the filter based on their roll data. It will also store the number of incidents for the Student in the `incident_count` field.
-3. The date the filter was `run_at` against each group will be recorded against the Group
-4. The number of students in the group, `student_count`, will be stored against the Group
+2. The filter will be run against each group, analysing the roll data and populating the matching students into the group.
+3. The metadata (explained above) will also be stored:
+    - `student_group.incident_count` (per student)
+    - `group.run_at`
+    - `group.student_count` 
 
-The Group Filters we need to support are:
+As explained above, the "roll filters" we need to support are:
 
-1. Time Period in Weeks (`number_of_weeks`), backwards in time from the date/time Now, AND
+1. Time Period in Weeks (`number_of_weeks`), AND
 2. One or more Roll States: `"unmark" | "present" | "absent" | "late"` (`roll_states`), AND
 3. (Greater than the Number of Incidents in the Time Period, OR 
 4. Less then the Number of Incidents in the Time Period) (`ltmt` and `incidents`)
+
+## Solution Presentation
+
+You will present your solution to us in an interview setting. We would like to see the working API's being called via Postman, just like you would when you are testing. We especially want to see proof that "RunGroupFilters" API is working as intended.
