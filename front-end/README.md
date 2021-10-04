@@ -1,5 +1,5 @@
 # Front End Engineering Test
-At Boardingware, most of our services are written in Javascript/Typescript. New features on the web are written in React with Typescript. This project has a similar setup to our web application. It will give you an idea of the codebase you will be working with as a front end engineer at Boardingware.
+At Orah, most of our services are written in Javascript/Typescript. New features on the web are written in React with Typescript. This project has a similar setup to our web application. It will give you an idea of the codebase you will be working with as a front end engineer at Orah.
 
 ## Technology
 This project is written in React with Typescript. However, it is not required for you to complete this test in Typescript. We are happy for you to complete this test using only Javascript (or more accurately Typescript without any type definitions). If this is your first time using Typescript, you can quickly (within 5 minutes) get started after reading this [guide](https://www.typescriptlang.org/docs/handbook/typescript-in-5-minutes.html).
