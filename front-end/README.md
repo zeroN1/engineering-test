@@ -46,7 +46,7 @@ cd front-end && npm i
 ### To start the local server
 #### npm
 ```sh
-cd front-end && npm start
+npm start
 ```
 
 ### Open app in browser
