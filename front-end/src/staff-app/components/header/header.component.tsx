@@ -8,7 +8,7 @@ export const Header: React.FC = () => {
   return (
     <S.Header>
       <S.HeaderItems>
-        <S.HeaderItem to="/">Boardingware</S.HeaderItem>
+        <NavItem to="/">Orah</NavItem>
         <NavItem to="daily-care">Daily Care</NavItem>
         <NavItem to="activity">Activity</NavItem>
       </S.HeaderItems>
@@ -17,10 +17,17 @@ export const Header: React.FC = () => {
 }
 
 const NavItem: React.FC<{ to: string }> = (props) => {
+  const activeStyle = ({ isActive }: { isActive: boolean }) => ({
+    textDecoration: "none",
+    fontWeight: FontWeight.strong,
+    color: "#fff",
+    padding: "18px 20px 17px",
+    backgroundColor: isActive ? "#1b4f90" : Colors.blue.base,
+  })
   return (
-    <S.HeaderItem to={props.to} activeStyle={{ backgroundColor: "#1b4f90" }}>
+    <NavLink to={props.to} style={activeStyle}>
       {props.children}
-    </S.HeaderItem>
+    </NavLink>
   )
 }
 
@@ -35,11 +42,5 @@ const S = {
   HeaderItems: styled.nav`
     display: flex;
     height: 100%;
-  `,
-  HeaderItem: styled(NavLink)`
-    text-decoration: none;
-    font-weight: ${FontWeight.strong};
-    color: #fff;
-    padding: 18px 20px 17px;
   `,
 }

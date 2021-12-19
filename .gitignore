@@ -6,8 +6,8 @@ node_modules
 # testing
 /coverage
 
-# production
-front-end/build
+# build
+front-end/dist
 
 # misc
 .DS_Store
