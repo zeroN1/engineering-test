@@ -1,19 +1,18 @@
 # Front End Engineering Test
-At Orah, most of our services are written in Javascript/Typescript. New features on the web are written in React with Typescript. This project has a similar setup to our web application. It will give you an idea of the codebase you will be working with as a front end engineer at Orah.
+At Orah, most of our services are written in Javascript/Typescript. New features on the web are written in React with Typescript. This project will give you an idea of the codebase you will be working with as a front end engineer at Orah.
 
 ## Technology
-This project is written in React with Typescript. However, it is not required for you to complete this test in Typescript. We are happy for you to complete this test using only Javascript (or more accurately Typescript without any type definitions). If this is your first time using Typescript, you can quickly (within 5 minutes) get started after reading this [guide](https://www.typescriptlang.org/docs/handbook/typescript-in-5-minutes.html).
+This project is written in React with Typescript. However, it is not required for you to complete this test in Typescript. If this is your first time using Typescript, you can quickly (within 5 minutes) get started after reading this [guide](https://www.typescriptlang.org/docs/handbook/typescript-in-5-minutes.html).
 
 We use [styled-component](https://styled-components.com/docs/basics#getting-started) for styling in this project. Feel free to use `css` or `sass` if you are more comfortable with them.
 
-This project also uses [material-ui](https://material-ui.com/components/buttons/) and [react-fontawesome](https://fontawesome.com/how-to-use/on-the-web/using-with/react) for some of the components and icons. You may use any component/icon library that you are familiar with.
 
 ## Instructions
-1. This test has all the necessary components for a functional app with some missing functionality which you will need to implement, however please feel free to add any files/components you deem useful.
-2. Please fork this repo under your own github account and create a branch named `solution` once you are ready to start.
-3. Please commit as you would normally do under your own `solution` branch as we would love to see how you progress.
-4. Try to go as far as you can but please do not spend more than 2-3 hours on this test.
-5. Create a Pull Request from `solution` to `master` under your own repo. Add a notes in the PR description if there is anything you want to mention, e.g. extra details you added or functional choice you made or things that you could improve.
+This test has all the necessary components for a functional app with some missing functionality which you will need to implement, however please feel free to add any files/components you deem useful.
+
+Please fork this repo under your own github account and create a branch named `solution` once you are ready to start and commit as you would normally do under your own `solution` branch as we would love to see how you progress.
+
+Create a Pull Request from `solution` to `master` under your own repo. Add a notes in the PR description if there is anything you want to mention, e.g. extra details you added or functional choice you made or things that you could improve.
 
 ## Tasks
 ### 1. Implement search and sort of students
@@ -29,22 +28,22 @@ Clicking on "Start Roll" will enter the roll mode which would display a roll sta
 ### 3. Filter students based on roll state
 When clicking on each roll state icon, it should filter the list of students to only the ones with the matching roll state. Please implement a way to filter students based on roll state. You may update how we store the list of students if you haven't done so in previous steps (you can continue with using states in React, or use [Context](https://reactjs.org/docs/context.html), or use whichever state management library you are most familiar with).
 
-### 4. (OPTIONAL) Save the current roll and display it in activity page
+### 4. (BONUS) Save the current roll and display it in activity page
 Finally once we are done with this roll, we can click on the "Complete" button to save a snapshot of the roll (which student is in what roll state). Please call the `save-roll` route with necessary params in order to save this roll.
 
 Once the roll has been saved, you can call the `get-activities` route to get list of rolls we have completed. Please implement the UI to display a list of completed rolls in the activity page.
+
+Most of the successful candidates have shown strong styling skills and a good sense of UX. Therefore it is recommended that you spend an extra effort to make it looks pretty ✨.
 
 ## How to run
 You will need to have Node **10.16.0** or later on your local development machine. You can use [nvm](https://github.com/creationix/nvm#installation) (macOS/Linux) or [nvm-windows](https://github.com/coreybutler/nvm-windows#node-version-manager-nvm-for-windows) to switch Node versions between different projects.
 
 ### First install all dependencies
-#### npm
 ```sh
 cd front-end && npm i
 ```
 
 ### To start the local server
-#### npm
 ```sh
 npm start
 ```
@@ -99,4 +98,4 @@ const [getStudents, data, loadState] = useApi<{ students: Person[] }>({ url: "ro
 
 ### src/staff-app
 
-This is the React app for staff users. We also have apps for other user types such as students or parents but we do not need them for this project.
+This is the React app for staff users.
