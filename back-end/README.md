@@ -1,214 +1,185 @@
-# Back End Engineering Test
-At Orah, most of our back end services are written in Typescript/Javascript/Node. This project shares similarities with our main web application in terms of technologies used. Hopefully this will give you some idea of what its like to be working on the team at Orah as you are working on this project.
+# Orah Engineering Test (Back End) Solution
 
-## Technology
-This project is mainly written in Typescript with Node. If you are not  familar with Typescript, you can check out this quick start guide [here](https://www.typescriptlang.org/docs/handbook/typescript-in-5-minutes.html).
+## Introduction
 
-We use TypeORM for our ORM. You can check out TypeORM [here](https://typeorm.io/#/).
+Firstly, thanks to Anirudh and the team at Orah for allowing me an opportunity to participate in this assessment. I really enjoyed it and learned a lot from the experience particularly about Typeorm since I have been meaning to pick up this library for a while and this assessment gave the perfect opportunity to do that. In this readme, I will present my understanding of the problem statement, a detailed discussion of the solution presented and other notable aspects that I found of intrigue or where I have added extra logic/code that was not asked for.
 
-## The Database
+## Problem Statement
 
-We dont use SQLite for our database at Orah but have done so in this test to keep our back end app lightweight. You can use the [sqlite command line shell](https://www.sqlite.org/cli.html) or a GUI like [sqlitebrowser](https://sqlitebrowser.org/) to work with the database.
+Schools use `Roll` as an entity to mark the attendance of students. A roll entity can be used for any day of a school week, for an event (science fair, festival, etc.,) or tracking online presence as well. The entity is flexible enough to be used for tracking student activity. The schema is explained below:
 
-These are the tables that we have generated:
-
-```sql
-CREATE TABLE roll(
-   	id INT PRIMARY KEY NOT NULL,
-   	name VARCHAR(255) NOT NULL,
-	completed_at DATE NOT NULL
-);
-
-CREATE TABLE student(
-    id INT PRIMARY KEY NOT NULL,
-    first_name VARCHAR(255) NOT NULL,
-    last_name VARCHAR(255) NOT NULL,
-    photo_url VARCHAR(255) NOT NULL
-);
-
-CREATE TABLE student_roll_state(
-   	id INT PRIMARY KEY NOT NULL,
-	student_id INT NOT NULL,
-	roll_id INT NOT NULL,
-	state CHAR(10) NOT NULL
-);
-
-CREATE TABLE group(
-   	id INT PRIMARY KEY NOT NULL,
-   	name VARCHAR(255) NOT NULL,
-	number_of_weeks INTEGER NOT NULL,
-	roll_states VARCHAR(255) NOT NULL,
-	incidents INTEGER NOT NULL,
-	ltmt CHAR NOT NULL,
-	run_at DATE,
-	student_count INTEGER NOT NULL
-);
-
-CREATE TABLE student_group(
-   	id INT PRIMARY KEY NOT NULL,
-	group_id INT NOT NULL,
-	student_id INT NOT NULL,
-	incident_count INT NOT NULL
-);
+```js
+{
+	name: "Name of the roll for example Week1Day1",
+	completed_at: "A timestamp that denotes when the roll entry was created"
+}
 ```
 
-To browse the database with a command line interface:
+For each student in the class/group/activity, a mapping is created that marks the a roll entry to a student (aka `StudentRollState`). This looks like the following:
 
-```sh
-cd back-end && sqlite3 backend-test.db
+```js
+{
+	roll_id: "ID of the roll entry",
+	student_id: "ID of the student being tracked",
+	state: "A string that marks the state of student (unmark, absent, present, late) or a comma separated combination of these values"
+}
 ```
 
-## How to get started and run the back end app
-You will need to have Node **10.16.0** or later on your local development machine. You can use [nvm](https://github.com/creationix/nvm#installation) (macOS/Linux) or [nvm-windows](https://github.com/coreybutler/nvm-windows#node-version-manager-nvm-for-windows) to switch Node versions between different projects.
+Schools now want to analyze students using the roll data. To do this, they want to create `Group` such that each group entry can define a set of filtering parameters that can be applied to find out how many students are part of a defined group (if any). A group has the following structure:
 
-### First install all dependencies
-
-```sh
-cd back-end && npm i
+```js
+{
+	name: "Name of the group like Consistently Late",
+	incidents: "Defines how many counts of activity (state in StudentRollState) is needed to qualify for this group",
+	number_of_weeks: "Defines how many weeks of data needs to be analyzed for this particular group",
+	ltmt: "The comparison operator (either < or >). This is used in the filter query to compare counts of incidents",
+	run_at: "The time when the filter was last run",
+	student_count: "The count of students in the group. This is updated each time the filter is run"
+}
 ```
 
-### To start the back-end app
+The above group parameters are used for each group to generate an extra mapping (aka `GroupStudent`) for lookup of a student in a particular group which has the following structure:
 
-```sh
-cd back-end && npm start
+```js
+{
+	student_id: "ID of the student in the group",
+	group_id: "ID of the group the student falls under",
+	incident_count: "Number of incidents counted for this student"
+}
 ```
 
-### Open app in browser
+`GroupStudent` mapping is recreated from new each time the filters are run. Running the filters mean taking each group in the DB, executing the filter using the query parameters defined, updating the group's `run_at` and `student_count` and finally mapping each student to a group in `GroupStudent` relation.
 
-Once the app is compiled successfully you can open the browser and go to http://localhost:4001/student/get-all to see a list of students
+The problem required an implementation of the Group Lifecycle APIs (or CRUD endpoints), an endpoint for mapping student information to a group and finally running the filters and populating the `GroupStudent` relation.
 
+## Group API
 
-## Project structure
-Open the project in VSCode as a workspace and install the recommented plugins:
+The following endpoints are defined for the `Group` entity:
 
-```sh
-cd back-end && sqlite3 backend-test.db
+1. **GET /group/get-all**: Returns a list of all groups defined in the DB
+
+2. **POST /group**: Creates a new group with all the parameters as discussed above defined for the group
+
+3. **PUT /group**: Updates an existing group. The parameters are same as in create but also includes an `id` which is the ID of the group to be updated
+
+4. **DELETE /group/:id**: Deletes the group with the provided ID in the path parameters
+
+5. **GET /group/:id/student**: Gets all the students for a group as specified by the `id`. This can return an empty array if the group has no students. It also assumes that the filters have been run before calling this endpoint
+
+6. **GET /group/run-filters**: Runs all the filters for each group in DB and repopulate the `GroupStudent` mapping. All previous mappings are removed before repopulating
+
+Check the Postman API definition included for details on each request.
+
+## Other Notable Changes
+
+1. Updating the routing system to include validation
+
+The routing type was changed to support `validator` property which returns a function which returns a `ValidationChain[]` as defined by `express-validator` package. All validators for each API entity is defined under `src/validators` folder. Each file is named after an entity which has an API and contains all the validators for all route paths (paths that has dynamic path parameters, get parameters or JSON body payload).
+
+The modified mapping looks as follows:
+
+```js
+{
+    method: "post",
+    route: "/student/create",
+    controller: StudentController,
+    action: "createStudent",
+    validator: CreateStudentValidator()
+}
 ```
-- `vscode-eslint` for linting
-- `prettier-vscode` for formatting
 
-You should see the project is structured as follows:
+where `CreateStudentValidator` is defined as follows in `src/validator/student.validator.ts`:
+
+```js
+export function CreateStudentValidator() {
+    return function(): ValidationChain[] {
+        return [
+            body("first_name", "Student must have first name")
+                .exists()
+                .isString()
+                .isLength({ min: 2, max: 100 }),
+            
+            body("last_name", "Student must have last name")
+                .exists()
+                .isString()
+                .isLength({ min: 2, max: 100 })
+        ]
+    }
+}
+```
+
+The above simply returns a function when called which can be used when registering route and handlers. The validation in the above example checks for the existence of first and last name, checks if they are `string` and checks if the length is between 2 and 100 inclusive.
+
+2. Changes to the route registration code
+
+The following code was being used in `index.ts` which serves as the bootstrap file for the entire application server:
+
+```js
+Routes.forEach((route) => {
+	;(app as any)[route.method](route.route, (req: Request, res: Response, next: Function) => {
+	const result = new (route.controller as any)()[route.action](req, res, next)
+	if (result instanceof Promise) {
+		result.then((result) => (result !== null && result !== undefined ? res.send(result) : undefined))
+	} else if (result !== null && result !== undefined) {
+		res.json(result)
+	}
+	})
+})
+```
+
+In the above code, there is the following issue:
+
+A controller have multiple methods (or actions). For each route, to reference an action, a new controller is defined. The use of controller is like that of a Singleton since each object does not maintain statefulness. As such the following code was creating unnecessary objects such that for `StudentController` which defines 4 routes and 4 actions, 4 instances of the controller will be created although a single instance would suffice.
+
+To address this issue and avoid multiple instances of the same controller, the following changes were added:
+
+```js
+const ctrls = {}
+Routes.forEach((route: IRoute) => {
+	let validator: any = route.validator
+	if(!validator) {
+	validator = [] 
+	} else {
+	validator = validator()
+	}
+	(app as express.Application)[route.method](route.route, validator, (req: Request, res: Response, next: express.NextFunction) => {
+	// if no validators are defined, assume valid by default
+	const validResult = !validator ? null : validationResult(req)
+	if(validResult && !validResult.isEmpty()) {
+		return next(new ApiError(400, validResult.array().map(e => e.msg).join("\n")))
+	}
+	const key = (route.controller as Object).constructor.name
+	let ctrl;
+	if(ctrls[key]) {
+		ctrl = ctrls[key]
+	} else {
+		ctrl = new (route.controller)()
+		ctrls[key] = ctrl
+	}
+	
+	const result = ctrl[route.action](req, res, next)
+	if(result instanceof Promise) {
+		result
+		.then((result) => result !== undefined && result !== null ? res.send(result) : res.json({ status: 200, message: 'OK'}))
+		.catch(e => {
+			console.error(e)
+			return next(new ApiError(500, "Server Error"))
+		})
+	} else if(result !== undefined && result !== null) {
+		res.json(result)
+	} else {
+		// no error and also no result; just return a dummy ok response
+		res.json({
+		status: 200,
+		message: "Ok"
+		})
+	}
+	})
+})
 
 ```
-.
-└── back-end
-    └── src
-        ├── controller
-        ├── entity
-        └── interface
+The above code make sure that multiple instances are not defined by using a map for each controller. It also adds a further check for `Promise` that does not resolve to a value i.e., `Promise<void>` and returns an appropriate JSON response. It also sends an appropriate error for each promise rejection (namely 500 "Server Error"). Finally, if no response is returned by the route handler (aka action) and no error was triggered, then it is assumed everything went as expected and a default success response is sent. Also, validation is performed for each route as expected.
 
-```
+3. An Error MW
 
-### src/controller
-
-This is the place for the controllers which contain the actual API functions used by the routes. The client app will call these API functions via the routes setup in `routes.ts`. We have three controllers:
-
-1. GroupController - the apis for Group CRUD as well as running the Group Filters to populate the Groups with Students.
-2. RollController - the apis for Roll CRUD as well as for running Student Rolls and storing the resulting Student Roll states.
-3. StudentController - the apis for Student CRUD
-
-### src/entity
-
-This is where we have our TypeORM entities. We have one entity per database table. We are using `sqlite3` for our database. In the root folder you will see the `backend-test.db` file which is the sqlite3 database we use. That is configured in `ormconfig.json`. 
-
-### src/interface
-
-This is where we code up our DTOs that we need.
-
-## Postman
-
-You can use the tool Postman to run the APIs against the routes. Postman can be downloaded [here](https://www.postman.com/downloads/).
-
-Note, you will see in `index.ts` that 15 students have been added automatically to the database.
-
-You wil be able to use Postman to do the following:
-
-1. Get all students: GET http://localhost:4001/student/get-all
-2. Create a roll: POST http://localhost:4001/roll/create
-3. Add student roll states to the roll: POST http://localhost:4001/roll/add-student-states
-4. (Not yet implemented) Create a group: POST http://localhost:4001/group/create
-5. (Not yet implemented) Run the group filters: POST http://localhost:4001/group/run-group-filters
-6. (Not yet implemented) Get the group list: GET http://localhost:4001/group/get-all
-7. (Not yet implemented) Get students in a group: GET http://localhost:4001/group/get-students-in-group
-
-
-## Tasks Background
-
-A Roll is created when Staff at the School do a Roll Check to ensure the Students are all present for the Class or other Activity.
-
-Staff at the School would like to analyse these rolls. To achieve this they are able to create `Groups` that are populated with `Students` based on their roll attendance.
-
-A `Group` is first created with "roll filter" settings (explained below), and no students in the group. Staff can create as many groups as they want.
-
-A `Group` is created with the following "roll filter" settings:
-
-* **name** - name of the group, e.g. "Frequently late students"
-* **number_of_weeks** - the number of weeks in the past (from now) used to analyse roll data, e.g. 2
-* **roll_states** - a csv of of roll states to match students with, e.g. "late" or "absent,late"
-* **incidents** - the number of occurrences that a student needs to match to be included in the filter, e.g. 3
-* **ltmt** - whether the student needs to match Less Than or More Than the "incidents" value to be included in the filter, e.g. "<" (less than) or ">" (more than)
-
-Once the group(s) have been created, the "RunGroupFilters" api (Task 2) is run to populate the groups with students based on their roll attendance and the "roll filter" settings saved to that group.
-
-For example, we create the "Frequently late students" group with the following settings:
-
-- *number_of_weeks*: 2
-- *roll_states*: "late"
-- *incidents*: 3
-- *ltmt*: ">" (more than)
-
-Once we run this group filter, we analyse the roll data over the previous 2 weeks to find which students have been "late" more than 3 times. The matching students should then be saved to the group (in the `student_group` table). The following metadata should also be saved:
-
-* **group.run_at** - the date and time the group filter was run
-* **group.student_count** - the count of students that were matched and saved to the group
-* **student_group.incident_count** - the number of roll occurrences that were found to match the filter for that particular student
-
-## Task 1 - Develop the Group CRUD lifecycle API's
-
-We need to be able to create groups, update groups, delete groups and get a list of the groups. We also need to be able to get a list of Students in a Group.
-
-### CreateGroup API
-
-Looking at the Group table, create an API so that a Group can be created with all of the fields populated. It is important that the client provides values for these fields:
-
-* `name` the name of the group
-* `number_of_weeks` will just be an integer, representing the number of weeks for the analysis period
-* `roll_states` will be one or more of the following values: `"unmark" | "present" | "absent" | "late"`
-* `incidents` is an integer representing the number of times the student meets the criteria in the period
-* `ltmt` stands for "Less Than or More Than". It will be either a `"<"` string or `">"`.
-
-### UpdateGroup and DeleteGroup API   	
-
-These APIs will allow the client to update a group and delete a group. The update group API allows the user to update the same fields as the CreateGroup API.
-
-### GetGroups API
-
-The GetGroups API will return a list of groups and will contain all the group fields.
-
-### GetGroupStudents API
-
-The GetGroupStudents API will return a list of the Students in the Group. It will return an array of students and include the fields: `id`, `first_name`, `last_name` and `full_name` (which is derived from the first and last name).
-
-## Task 2 - Develop the RunGroupFilters API 
-
-In order to complete this task, you will need roll data in the database. Use the existing roll api routes to generate some roll data over the last few weeks that will be used for analysis.
-
-When the user runs the Group Filters to do an Analysis, the following will happen:
-
-1. The Students currently in each Group will be deleted
-2. The filter will be run against each group, analysing the roll data and populating the matching students into the group.
-3. The metadata (explained above) will also be stored:
-    - `student_group.incident_count` (per student)
-    - `group.run_at`
-    - `group.student_count` 
-
-As explained above, the "roll filters" we need to support are:
-
-1. Time Period in Weeks (`number_of_weeks`), AND
-2. One or more Roll States: `"unmark" | "present" | "absent" | "late"` (`roll_states`), AND
-3. (Greater than the Number of Incidents in the Time Period, OR 
-4. Less then the Number of Incidents in the Time Period) (`ltmt` and `incidents`)
-
-## Solution Presentation
-
-You will present your solution to us in an interview setting. We would like to see the working API's being called via Postman, just like you would when you are testing. We especially want to see proof that "RunGroupFilters" API is working as intended.
+A simple error MW and an error type `ApiError` was used for handling error centrally in the application. For each handler, it can pass a new instance of `ApiError` with appropriate code and message to the `next` function to trigger the error MW. 
