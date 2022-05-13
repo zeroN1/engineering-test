@@ -35,6 +35,7 @@ export class Group {
     this.ltmt = input.ltmt
     this.incidents = input.incidents
     this.roll_states = input.roll_states
+    this.student_count = 0
   }
 
   public prepareToUpdate(input: UpdateGroupInput) {

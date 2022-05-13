@@ -99,21 +99,26 @@ export class GroupController {
     // is defined
     const dateRangeStart = `datetime('now', '${-7*number_of_weeks} day')`
     const dateRangeEnd = "datetime('now')"
-    const students = await manager
-      .createQueryBuilder(StudentRollState, "srs")
+    const q = manager
+      .createQueryBuilder()
       .select(
         "srs.student_id, count(srs.state) as incidents"
       )
+      .from(StudentRollState, "srs")
       .leftJoin("student", "std", "std.id = srs.student_id")
       .leftJoin("roll", "r", "r.id = srs.roll_id")
       .where("srs.state = :roll_states", { roll_states })
-      .andWhere("r.completed_at >= :dateRangeStart", { dateRangeStart })
-      .andWhere("r.completed_at <= :dateRangeEnd", { dateRangeEnd })
+      .andWhere(`r.completed_at >= ${dateRangeStart}`)
+      .andWhere(`r.completed_at <= ${dateRangeEnd}`)
       .groupBy("srs.student_id")
       .having(`incidents ${ltmt} :num_incidents`, { num_incidents: incidents })
-      .execute()
+      
+    console.log(q.getQueryAndParameters(  ))
+    const students = await q.execute()
     
-
+    
+    console.log("Groups")
+    console.log(students)
     group.student_count = students.length
     group.run_at = new Date(Date.now())
     await manager.save(group)

@@ -47,6 +47,7 @@ createConnection()
       } else {
         validator = validator()
       }
+
       (app as express.Application)[route.method](route.route, validator, (req: Request, res: Response, next: express.NextFunction) => {
         // if no validators are defined, assume valid by default
         const validResult = !validator ? null : validationResult(req)
@@ -60,9 +61,11 @@ createConnection()
         } else {
           ctrl = new (route.controller)()
           ctrls[key] = ctrl
+          console.log(ctrls)
         }
         
         const result = ctrl[route.action](req, res, next)
+        //console.log(ctrl)
         if(result instanceof Promise) {
           result
             .then((result) => result !== undefined && result !== null ? res.send(result) : res.json({ status: 200, message: 'OK'}))
@@ -81,6 +84,7 @@ createConnection()
         }
       })
     })
+    console.log(ctrls)
     // mount error MW here
     app.use(apiErrorMw)
     
